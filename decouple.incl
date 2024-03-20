@@ -1,0 +1,56 @@
+;$COMMENT=decoupling relations
+;$CLASS=Solids INCL
+;$DIM=
+;$TYPE=decoupling
+;$SUBTYPE=
+;$OWNER=Trebosc
+; decoupling include file *****************************
+
+#ifdef decjquad
+; decoupling of J from quadrupolar coupled spins
+; using rotor synchronised adiabatic pulse
+;cnst30 : _decjquad adiabatic factor =0.33
+;cnst31 : spinning speed
+;pl13 : Decjquad dec. power
+;l31 : dejquad rotor period skipped
+"p31=(1s*cnst30)/cnst31"
+"d31=(1s*l31)/cnst31-p31"
+#endif
+;---
+#ifdef decjquad2
+; same as decjquad but uses p29 and d29 
+;cnst30 : adiabatic factor =0.33
+;l31 : dejquad rotor period skipped
+;"p29=(1s*cnst30)/cnst31"
+"d29=(1s*l31)/cnst31"
+#endif
+;---
+#ifdef decjld
+; laurent sequence
+;cnst30 : adiabatic factor =0.33
+"d31=10u-(10u*cnst30)"
+"p31=(10u*cnst30)"
+#endif
+;--- untested sequences ---
+#ifdef xix
+; XiX decoupling sequence 
+;l31 : number of rotor cycles for XiX (=3)
+"p31=(1s*l31)/cnst31+p29"
+#endif /* xix */
+;---
+#ifdef pidec
+"d30=1s/cnst31-p22"
+#endif /* pidec */
+;---
+#ifdef lg
+;spnam1	: lgs-1, lgs-4 or pmlg-36,
+;cnst20 : proton RF field to calculate LG parameters
+;cnst21 : =0, proton offset
+;cnst22 : +ve Lee-Goldburg offset
+;cnst23 : -ve Lee-Goldburg offset
+;cnst24 : additional Lee-Goldburg offset
+#include <lgcalc.incl>
+#endif
+;---
+
+

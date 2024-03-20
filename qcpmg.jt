@@ -1,0 +1,154 @@
+; dfs_qcpmg (TopSpin 3.0)
+; FOR AVIII
+
+; written by Stefan Steuernagel
+; modified by Julien TREBOSC
+; 29/12/2007 : modified REC_UNBLK -> RGP_PA_ON/RGP_ADC_ON/RGP_RX_ON
+; pulse program for quadrupolar CPMG sequence
+; samples continuously, including ALL pulses and ringdown delays
+; may be used with digmod digital
+; 14-07-2007 : changed del1/del2 for 1st echo
+;              added 1H decoupling option
+; follows Z.Gan advice : full echo, mini phase cycling, full synchro
+; adapt to topspin 3.0 AVIII
+
+;parameters:
+;ns : 16 * n
+;d1 : recycle delay
+;d3 : time to allow pulse ringdown, 10 to 100 us
+;d6 : enter duration of FID
+;pl1 : =120 dB, not used
+;pl21 : RF power level
+;pl22 : =pl21 usually, =120 dB if 180s are not desired
+;p3 : 90 degree pulse
+;p4 : 180 degree pulse
+;l22 : # of echos to be acquired
+;cnst31 : spinning speed (irrelevant if static)
+;p60 : store status cycle time (read for processing)
+
+;p8 : duration of sweep
+;sp8 : power for frequency sweep
+;spnam8 : dfs or HS
+;cnst1 : (kHz) Start DFS sweep freq.
+;cnst2 : (kHz) End DFS sweep freq. (=cnst31 for HS)
+;cnst3 : (ns) timing resolution of sweep
+;cnst4 : HS offset 
+
+;$COMMENT=quadrupolar CPMG sequence, samples continuously, pulses blanked out, requires DRU
+;$CLASS=Solids
+;$DIM=1D
+;$TYPE=half integer quadrupoles
+;$SUBTYPE=simple 1D
+;$OWNER=Bruker
+
+; fix a bug for STARTADC in Avancesolids.incl
+#include <Avancesolids.incl>
+
+#ifdef decF2
+#include "decouple.incl"
+#define decF2ON cpds2:f2
+#define decF2OFF do:f2
+#else
+#define decF2ON
+#define decF2OFF 
+#endif
+
+#include "presat.incl"
+#ifndef PRESAT
+#undef PRESAT1
+#define PRESAT1(f1)
+#endif
+
+;"p4=p3*2"
+
+define delay del1
+define delay del3
+define loopcounter tmpD3
+define delay d3best
+define loopcounter tmpTD
+define loopcounter TDtot
+define delay rest
+define delay Spik_int 
+define delay cycle
+define delay showInASED
+define delay DwellperCycle
+
+; Calculate best d3 for rotor synchronisation
+"tmpD3=trunc((d6 + p4/2)*cnst31)"
+"d3best=(1s*(tmpD3+1)/cnst31)-d6-(p4/2.0)"
+
+#ifndef noSyncd3
+"d3=d3best"
+#endif
+
+"del1=d3-(p3/2)"
+"del3=d3-2u"
+
+;calculate minimum TD to set
+"tmpTD=0.5*(((d6*2+d3*2+p4)*l22)+2*d6+2*d3+p4+4u)/dw"
+"TDtot=(tmpTD+1)*2"
+; dwell must be in sync with rotor period
+"cycle=(d6*2+d3*2+p4)"
+"p60=cycle"
+"DwellperCycle=0.5*cycle/dw"
+"Spik_int=1s/(d6*2+d3*2+p4)"
+
+"rest=aq-(TDtot*dw)"
+
+#ifdef _DFS
+#define DFS_SAT 4u \n (p8:sp8 ph0):f1 \n 4u
+"showInASED=DwellperCycle+cycle+TDtot+cnst1+cnst2+cnst3+cnst4+d3best+Spik_int"
+#else
+#define DFS_SAT 
+"showInASED=TDtot+d3best+Spik_int+cycle+DwellperCycle"
+#endif
+
+dwellmode auto
+
+1 ze
+"showInASED=1u"
+2 1u
+PRESAT1(f1)
+  d1
+  STARTADC
+  RESETPHASE
+  DFS_SAT
+ 1u 
+ (p3 pl21 ph1):f1
+  d6 decF2ON 
+  del1 
+  (p4 ph2):f1
+  del3 START_NEXT_SCAN
+  1u 
+  1u  
+3  d6 RG_ON 
+  d6 
+  2u 
+  del3 RG_OFF
+  (p4 pl21 ph3):f1
+  del3 
+  2u 
+  lo to 3 times l22
+  d6 RG_ON
+  d6
+  del3 RG_OFF
+  rest decF2OFF
+  1u 
+  rcyc=2
+  10m wr #0
+exit
+
+ph0=0
+ph1=0 2
+ph2=1 1 ;3 3
+ph3=1 1 ;3 3
+ph30=0
+ph31=2 0
+;ph0=0
+;ph1=0 1 2 3
+;ph2=1 0 1 0 3 2 3 2 1 0 1 0 3 2 3 2
+;ph3=1 0 1 0 3 2 3 2 3 2 3 2 1 0 1 0
+;ph30=0
+;ph31=2 3 0 1
+presatPH
+

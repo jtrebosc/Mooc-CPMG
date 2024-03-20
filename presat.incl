@@ -1,0 +1,38 @@
+;$COMMENT=presaturation loops
+;$CLASS=Solids INCL
+;$DIM=
+;$TYPE=presaturation
+;$SUBTYPE=
+;$OWNER=Trebosc
+
+;Presat include file ***************************************
+;d20 : delai between Presat pulses (p20)
+;pl20 : power of Presat pulses (p20)
+;l20 : number of Presat pulses (p20)
+;p20 : Presat pulses
+;ph20 : phase of Presat pulses (p20)
+; second presat parameters
+;d19 : delai between Presat2 pulses (p21)
+;pl19 : power of Presat2 pulses (p19)
+;l19 : number of Presat2 pulses (p19)
+;p19 : Presat2 pulses
+;ph19 : phase of Presat2 pulses (p19)
+
+#define PRESAT1(ch) 983547 d20 pl20:ch \n\
+  (p20 ph20^):ch \n\
+  lo to 983547 times l20
+
+#define PRESAT2(ch) 9835472 d19 pl19:ch \n\
+  (p19 ph19^):ch \n\
+  lo to 9835472 times l19
+
+#define PRESAT11(ch) 9835479 d20 pl20:ch \n\
+  (p20 ph20^):ch \n\
+  lo to 9835479 times l20
+#define PRESAT22(ch) 98354729 d19 pl19:ch \n\
+  (p19 ph19^):ch \n\
+  lo to 98354729 times l19
+
+#define presatPH ph19= 0  \n ph20= 0
+
+;***********************************************************
