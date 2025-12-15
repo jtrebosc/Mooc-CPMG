@@ -1,0 +1,77 @@
+; mp3qzqf.av (TopSpin 2.0)
+
+; 3Q MAS pulse program for half integer spin nuclei
+; experiment with zero quantum filter:
+; excitation - t1(3Q) - conversion -  tau(zqf) - 90sel - acquisition
+; 90 selective pulse should be determined first using Hahn-echo,
+; determination by single pulse excitation is also possible
+; then optimise p2 and finally p1, 2 or more iterations for p1 and p2 may be necessary
+; for processing shearing transformation may be required, 
+; use AU program xfshear
+; see also mp3q, mp3qzfil, mp3qdfs, mp3qfam, mp3qdfsz, mp3qfamz
+
+;ns : 24 * n or even 144
+;d1 : recycle delay
+;p1 : excitation pulse at pl11
+;p2 : conversion pulse at pl11
+;p3 : 90 degree selective pulse at pl21
+;pl1 : =120 dB
+;pl11 : power level for excitation and conversion pulses
+;pl21 : power level for selective pulse, ca. pl11 + 30 dB
+;d4 : z-filter delay, usually =20u
+;d0 : =1u or longer
+;in0 : 1 rotation period for synchronised experiment
+;td1 : number of t1-experiments
+;FnMODE : States
+;MC2 : States
+;ZGOPTNS : -Dopt1D
+
+;$COMMENT=3-pulse z-filter 3Q MAS
+;$CLASS=Solids
+;$DIM=2D
+;$TYPE=half integer quadrupoles
+;$SUBTYPE=MQMAS
+;$OWNER=Julien
+;"p1=3*p2"
+
+#include <Avance.incl>
+#ifdef PRESAT
+#include "presat.incl"
+#else
+#define PRESAT1(f1)
+#define presatPH
+#endif
+
+#ifdef decF2
+#define tppm
+#include "decouple.incl"
+#define decF2on cpds2:f2
+#define decF2off do:f2
+#else
+#define decF2on
+#define decF2off 
+#endif
+
+"in0=inf1"
+
+  ze
+1 30m decF2off
+  PRESAT1(f1)
+  d1
+  10u pl11:f1
+  (p1 ph1):f1
+  d0 decF2on
+  (p2 ph2):f1
+  d4
+  (p3 pl21 ph3):f1
+  go=1 ph31
+  50u decF2off
+  30m mc #0 to 1 F1PH(ip1,id0)
+exit
+
+ph1=(12) 0 2 4 6 8 10
+ph2=(6) {{0}*24}^1^2^3^4^5
+ph3={{0}*6}^2^1^3
+ph31={{0 2 0 2 0 2}^2^1^3}^2^0^2^0^2
+ph0=0
+presatPH
